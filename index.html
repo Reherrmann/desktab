@@ -17,6 +17,7 @@ input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #3
 .tela{width:25%;height:100%;position:relative;overflow:hidden}
 .rolar{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 24px 50px}
 #puxar{position:fixed;top:-50px;left:0;right:0;text-align:center;z-index:20;color:#4ff0ff;font:16px "Share Tech Mono",monospace;padding:12px;opacity:0}
+#subir{position:fixed;bottom:-50px;left:0;right:0;text-align:center;z-index:20;color:#4ff0ff;font:16px "Share Tech Mono",monospace;padding:12px;opacity:0}
 #pontos{position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:5}
 #pontos span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin:0 5px}
 #pontos span.on{background:#e8e8e8}
@@ -71,7 +72,6 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
 /* Ajustes */
 #ajustes{position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0f12;z-index:10;display:none}
 #ajustes label{display:block;margin:14px 0 4px;color:#9aa;font-size:14px}
-#btAjustes{position:absolute;top:12px;right:12px;background:none;font-size:22px;color:#555}
 .alerta{-webkit-animation:pisca 1s 3;animation:pisca 1s 3}
 @-webkit-keyframes pisca{50%{background:#f5a623}}
 @keyframes pisca{50%{background:#f5a623}}
@@ -81,7 +81,6 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
 <div id="trilho">
   <!-- 1. Geral: relógio + Spotify -->
   <section class="tela"><div class="col" style="padding:24px">
-    <button id="btAjustes">⚙</button>
     <div class="tech">
       <div class="hora"><span id="hora">--:--</span></div>
       <div class="barra"><i id="segBarra"></i></div>
@@ -114,6 +113,7 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
   </div></section>
 </div>
 <div id="puxar">↻ Solte para atualizar</div>
+<div id="subir">⚙ Solte para abrir os ajustes</div>
 <div id="pontos"><span class="on"></span><span></span><span></span><span></span></div>
 
 <div id="ajustes" class="rolar">
@@ -152,7 +152,7 @@ function http(met, url, hdr, corpo, cb) {
   x.send(corpo || null);
 }
 
-var VERSAO = '4';
+var VERSAO = '5';
 /* Recarrega sozinho quando sai versão nova no GitHub Pages */
 setInterval(function () {
   var x = new XMLHttpRequest();
@@ -167,7 +167,12 @@ var cfg = ler('cfg', {});
 function c(k, d) { return cfg[k] === undefined || cfg[k] === '' ? d : cfg[k]; }
 
 /* ---------- Deslizar entre telas ---------- */
-var trilho = $('trilho'), atual = 0, N = 4, x0 = null, y0 = 0, dx = 0, dy = 0, puxa = false;
+var trilho = $('trilho'), atual = 0, N = 4, x0 = null, y0 = 0, dx = 0, dy = 0, puxa = false, sobe = false;
+function subirMostra(v) {
+  var p = $('subir'), t = 'translateY(' + (-Math.min(v, 140)) + 'px)';
+  p.style.webkitTransform = p.style.transform = t; p.style.opacity = Math.min(v / 120, 1);
+  p.textContent = v > 120 ? '⚙ Solte para abrir os ajustes' : '↑ Puxe para os ajustes';
+}
 function puxarMostra(v) {
   var p = $('puxar'), t = 'translateY(' + Math.min(v, 140) + 'px)';
   p.style.webkitTransform = p.style.transform = t; p.style.opacity = Math.min(v / 120, 1);
@@ -185,12 +190,15 @@ function irPara(i) {
 document.addEventListener('touchstart', function (e) {
   if (e.target.type === 'range' || $('ajustes').style.display === 'block') { x0 = null; return; }
   x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dy = 0;
-  puxa = cls('tela')[atual].scrollTop === 0;
+  var tl = cls('tela')[atual];
+  puxa = tl.scrollTop === 0;
+  sobe = tl.scrollTop + tl.clientHeight >= tl.scrollHeight - 2;
 }, false);
 document.addEventListener('touchmove', function (e) {
   if (x0 === null) return;
   dx = e.touches[0].clientX - x0; dy = e.touches[0].clientY - y0;
   if (puxa && dy > 0 && dy > Math.abs(dx) * 1.5) { e.preventDefault(); dx = 0; puxarMostra(dy); return; }
+  if (sobe && dy < 0 && -dy > Math.abs(dx) * 1.5) { e.preventDefault(); dx = 0; subirMostra(-dy); return; }
   if (Math.abs(dx) > Math.abs(dy)) {
     e.preventDefault();
     var w = window.innerWidth, t = 'translateX(' + (-atual * w + dx) / 4 / w * 100 + '%)';
@@ -201,7 +209,8 @@ document.addEventListener('touchmove', function (e) {
 document.addEventListener('touchend', function () {
   if (x0 === null) return; x0 = null;
   if (puxa && dy > 120 && dx === 0) { location.replace(location.pathname + '?r=' + Date.now()); return; }
-  puxarMostra(0);
+  if (sobe && dy < -120 && dx === 0) { subirMostra(0); abrirAjustes(); return; }
+  puxarMostra(0); subirMostra(0);
   irPara(Math.abs(dx) > window.innerWidth / 6 ? atual + (dx < 0 ? 1 : -1) : atual);
 }, false);
 document.addEventListener('keydown', function (e) { if (e.keyCode === 39) irPara(atual + 1); if (e.keyCode === 37) irPara(atual - 1); }, false);
@@ -236,7 +245,7 @@ var tok = ler('sptok', null), estado = null;
   var caixas = cls('sp');
   for (var i = 0; i < caixas.length; i++) {
     caixas[i].innerHTML = '<div class="sp-capa"></div><div class="sp-info"><div class="sp-tit">Spotify</div>' +
-      '<div class="sp-art sp-msg">Toque em ⚙ para conectar</div><div class="sp-bts">' +
+      '<div class="sp-art sp-msg">Puxe a tela para cima e conecte</div><div class="sp-bts">' +
       '<button data-a="prev">⏮</button><button data-a="play">▶</button><button data-a="next">⏭</button></div>' +
       '<input type="range" class="sp-vol" min="0" max="100" value="50"></div>';
     var bts = caixas[i].getElementsByTagName('button');
@@ -297,7 +306,7 @@ function spDesenhar() {
   for (i = 0; i < tit.length; i++) {
     tit[i].textContent = it ? it.name : (tok ? 'Nada tocando' : 'Spotify');
     art[i].textContent = it ? (it.artists || []).map(function (a) { return a.name; }).join(', ') :
-      (tok ? 'Abra o Spotify no PC ou celular' : 'Toque em ⚙ para conectar');
+      (tok ? 'Abra o Spotify no PC ou celular' : 'Puxe a tela para cima e conecte');
     var img = it && it.album && it.album.images && it.album.images.length ? it.album.images[it.album.images.length > 1 ? 1 : 0].url : '';
     capa[i].style.backgroundImage = img ? 'url(' + img + ')' : '';
     if (estado && estado.device && document.activeElement !== vol[i]) vol[i].value = estado.device.volume_percent;
@@ -364,7 +373,7 @@ function haReq(met, caminho, corpo, cb) {
 }
 function casaMontar() {
   var l = casaLista(), h = '';
-  if (!c('haUrl', '') || !l.length) { $('casaMsg').innerHTML = '<p style="color:#9aa">Configure o Home Assistant em ⚙ (tela 1).</p>'; $('casa').innerHTML = ''; return; }
+  if (!c('haUrl', '') || !l.length) { $('casaMsg').innerHTML = '<p style="color:#9aa">Puxe a tela para cima para configurar o Home Assistant.</p>'; $('casa').innerHTML = ''; return; }
   for (var i = 0; i < l.length; i++) h += '<button class="disp" data-i="' + i + '"><b>' + esc(l[i].nome) + '</b><small>…</small></button>';
   $('casa').innerHTML = h; $('casaMsg').innerHTML = '';
   var bts = $('casa').getElementsByTagName('button');
@@ -449,11 +458,11 @@ $('addTarefa').onclick = function () {
 tarefasDesenhar();
 
 /* ---------- Ajustes ---------- */
-$('btAjustes').onclick = function () {
+function abrirAjustes() {
   $('cfSpId').value = c('spId', ''); $('cfHaUrl').value = c('haUrl', ''); $('cfHaToken').value = c('haToken', '');
   $('cfHaEnt').value = c('haEnt', ''); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12);
   contarFotos(); $('ajustes').style.display = 'block';
-};
+}
 $('btSpLogin').onclick = spLogin;
 $('btSpSair').onclick = function () { tok = null; estado = null; gravar('sptok', null); spDesenhar(); };
 $('btSalvar').onclick = function () {
