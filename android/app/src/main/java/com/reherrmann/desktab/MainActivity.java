@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW); // Home Assistant em http
         s.setMediaPlaybackRequiresUserGesture(false);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE); // sempre pega a versão mais nova do painel
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
