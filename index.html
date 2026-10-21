@@ -16,6 +16,7 @@ input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #3
 #trilho{position:absolute;top:0;left:0;height:100%;width:400%;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-transition:-webkit-transform .3s ease;transition:transform .3s ease}
 .tela{width:25%;height:100%;position:relative;overflow:hidden}
 .rolar{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 24px 50px}
+#puxar{position:fixed;top:-50px;left:0;right:0;text-align:center;z-index:20;color:#4ff0ff;font:16px "Share Tech Mono",monospace;padding:12px;opacity:0}
 #pontos{position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:5}
 #pontos span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin:0 5px}
 #pontos span.on{background:#e8e8e8}
@@ -112,6 +113,7 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
     </div>
   </div></section>
 </div>
+<div id="puxar">↻ Solte para atualizar</div>
 <div id="pontos"><span class="on"></span><span></span><span></span><span></span></div>
 
 <div id="ajustes" class="rolar">
@@ -150,7 +152,7 @@ function http(met, url, hdr, corpo, cb) {
   x.send(corpo || null);
 }
 
-var VERSAO = '3';
+var VERSAO = '4';
 /* Recarrega sozinho quando sai versão nova no GitHub Pages */
 setInterval(function () {
   var x = new XMLHttpRequest();
@@ -165,7 +167,12 @@ var cfg = ler('cfg', {});
 function c(k, d) { return cfg[k] === undefined || cfg[k] === '' ? d : cfg[k]; }
 
 /* ---------- Deslizar entre telas ---------- */
-var trilho = $('trilho'), atual = 0, N = 4, x0 = null, y0 = 0, dx = 0;
+var trilho = $('trilho'), atual = 0, N = 4, x0 = null, y0 = 0, dx = 0, dy = 0, puxa = false;
+function puxarMostra(v) {
+  var p = $('puxar'), t = 'translateY(' + Math.min(v, 140) + 'px)';
+  p.style.webkitTransform = p.style.transform = t; p.style.opacity = Math.min(v / 120, 1);
+  p.textContent = v > 120 ? '↻ Solte para atualizar' : '↓ Puxe para atualizar';
+}
 function irPara(i) {
   atual = Math.max(0, Math.min(N - 1, i));
   var t = 'translateX(' + (-atual * 25) + '%)';
@@ -177,12 +184,14 @@ function irPara(i) {
 }
 document.addEventListener('touchstart', function (e) {
   if (e.target.type === 'range' || $('ajustes').style.display === 'block') { x0 = null; return; }
-  x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0;
+  x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dy = 0;
+  puxa = cls('tela')[atual].scrollTop === 0;
 }, false);
 document.addEventListener('touchmove', function (e) {
   if (x0 === null) return;
-  dx = e.touches[0].clientX - x0;
-  if (Math.abs(dx) > Math.abs(e.touches[0].clientY - y0)) {
+  dx = e.touches[0].clientX - x0; dy = e.touches[0].clientY - y0;
+  if (puxa && dy > 0 && dy > Math.abs(dx) * 1.5) { e.preventDefault(); dx = 0; puxarMostra(dy); return; }
+  if (Math.abs(dx) > Math.abs(dy)) {
     e.preventDefault();
     var w = window.innerWidth, t = 'translateX(' + (-atual * w + dx) / 4 / w * 100 + '%)';
     trilho.style.webkitTransition = trilho.style.transition = 'none';
@@ -191,6 +200,8 @@ document.addEventListener('touchmove', function (e) {
 }, false);
 document.addEventListener('touchend', function () {
   if (x0 === null) return; x0 = null;
+  if (puxa && dy > 120 && dx === 0) { location.replace(location.pathname + '?r=' + Date.now()); return; }
+  puxarMostra(0);
   irPara(Math.abs(dx) > window.innerWidth / 6 ? atual + (dx < 0 ? 1 : -1) : atual);
 }, false);
 document.addEventListener('keydown', function (e) { if (e.keyCode === 39) irPara(atual + 1); if (e.keyCode === 37) irPara(atual - 1); }, false);
