@@ -16,10 +16,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.9' }
       - run: gradle -p android assembleRelease --no-daemon
-      - run: cp android/app/build/outputs/apk/release/app-release.apk DESKtab.apk
+      - id: v
+        run: |
+          V=$(grep -oP 'versionCode \K[0-9]+' android/app/build.gradle)
+          echo "n=$V" >> "$GITHUB_OUTPUT"
+          cp android/app/build/outputs/apk/release/app-release.apk DESKtab-v$V.apk
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk
-          name: DESKtab APK
+          tag_name: v${{ steps.v.outputs.n }}
+          name: DESKtab v${{ steps.v.outputs.n }}
           make_latest: true
-          files: DESKtab.apk
+          files: DESKtab-v${{ steps.v.outputs.n }}.apk

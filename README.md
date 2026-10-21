@@ -16,6 +16,6 @@ Telas (arraste para o lado):
 Configurações, fotos e tarefas ficam salvas só no tablet.
 
 ## App Android (APK)
-Baixe: https://github.com/Reherrmann/desktab/releases/latest/download/DESKtab.apk
+Baixe: https://github.com/Reherrmann/desktab/releases/latest (baixe o arquivo DESKtab-vN.apk mais recente)
 O app abre o painel em tela cheia, mantém a tela ligada e abre sozinho quando o tablet liga.
 Ele carrega a página do GitHub Pages, então melhorias no `index.html` chegam sem reinstalar.
