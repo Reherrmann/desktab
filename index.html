@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0f12">
+<title>DESKtab</title>
+<link href="https://fonts.googleapis.com/css?family=Orbitron:400,700|Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0d0f12;color:#e8e8e8;font-family:Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;background:#1e2228;border:0;border-radius:12px;padding:12px 16px;cursor:pointer}
+button:active{background:#2c323a}
+input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #333;border-radius:8px;padding:10px;width:100%;-webkit-user-select:text;user-select:text}
+#trilho{position:absolute;top:0;left:0;height:100%;width:400%;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-transition:-webkit-transform .3s ease;transition:transform .3s ease}
+.tela{width:25%;height:100%;position:relative;overflow:hidden}
+.rolar{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 24px 50px}
+#pontos{position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:5}
+#pontos span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin:0 5px}
+#pontos span.on{background:#e8e8e8}
+.col{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;height:100%}
+/* Relógio: troque este bloco quando escolher o modelo */
+.tech{position:relative;padding:3vmin 5vmin;text-align:center;font-family:"Share Tech Mono",monospace;color:#4ff0ff}
+.tech:before,.tech:after{content:"";position:absolute;width:28px;height:28px;border:2px solid #4ff0ff;opacity:.6}
+.tech:before{top:0;left:0;border-right:0;border-bottom:0}
+.tech:after{bottom:0;right:0;border-left:0;border-top:0}
+.hora{font-family:Orbitron,"Share Tech Mono",monospace;font-weight:700;font-size:19vmin;line-height:1;letter-spacing:1vmin;text-shadow:0 0 12px rgba(79,240,255,.55)}
+.hora small{font-size:7vmin;color:#ff3fa4;text-shadow:0 0 10px rgba(255,63,164,.6);margin-left:1vmin}
+.barra{height:3px;background:#12303a;margin:2vmin 0 1.5vmin}
+.barra i{display:block;height:100%;width:0;background:#4ff0ff;box-shadow:0 0 8px #4ff0ff}
+.data{font-size:3.6vmin;letter-spacing:.5vmin;color:#7fb8c4}
+.stat{font-size:2.6vmin;color:#3d6c78;margin-top:1vmin;letter-spacing:.3vmin}
+/* Spotify */
+.sp{width:100%;max-width:640px;margin-top:5vmin;background:#16191e;border-radius:16px;padding:14px;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
+.sp-capa{width:72px;height:72px;border-radius:8px;background:#222 center/cover no-repeat;-webkit-flex-shrink:0;flex-shrink:0;margin-right:14px}
+.sp-info{-webkit-box-flex:1;-webkit-flex:1;flex:1;min-width:0}
+.sp-tit{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-art{font-size:14px;color:#9aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.sp-bts button{padding:8px 14px;margin-right:6px;font-size:18px}
+.sp-vol{width:100%;margin-top:8px}
+.sp-msg{font-size:14px;color:#9aa}
+/* Fotos */
+.foto{position:absolute;top:0;left:0;right:0;bottom:0;background:#000 center/contain no-repeat;opacity:0;-webkit-transition:opacity 1.2s;transition:opacity 1.2s}
+.foto.on{opacity:1}
+#fotosBarra{position:absolute;left:16px;right:16px;bottom:30px}
+#fotosBarra .sp{margin:0 auto;background:rgba(15,17,20,.75)}
+#fotosVazio{position:absolute;top:40%;width:100%;text-align:center;color:#9aa}
+/* Casa */
+.grade{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -6px}
+.disp{width:calc(33.33% - 12px);margin:6px;padding:18px 12px;text-align:left;min-height:96px}
+.disp b{display:block;font-size:16px;font-weight:normal}
+.disp small{color:#9aa}
+.disp.lig{background:#f5a623;color:#111}
+.disp.lig small{color:#333}
+h2{font-weight:300;font-size:24px;margin-bottom:14px}
+.aviso{color:#e88;margin:10px 0}
+/* Trabalho */
+.duas{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+.duas>div{-webkit-box-flex:1;-webkit-flex:1 1 320px;flex:1 1 320px;margin:0 10px 20px}
+.pomo{font-size:16vmin;font-weight:100;text-align:center}
+.centro{text-align:center}
+.centro button{margin:4px}
+.tarefa{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;padding:12px 0;border-bottom:1px solid #222}
+.tarefa span{-webkit-box-flex:1;-webkit-flex:1;flex:1;cursor:pointer}
+.tarefa.ok span{text-decoration:line-through;color:#666}
+.tarefa button{padding:4px 12px}
+.linha{display:-webkit-box;display:-webkit-flex;display:flex;margin-bottom:12px}
+.linha input{-webkit-box-flex:1;-webkit-flex:1;flex:1;margin-right:8px}
+/* Ajustes */
+#ajustes{position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0f12;z-index:10;display:none}
+#ajustes label{display:block;margin:14px 0 4px;color:#9aa;font-size:14px}
+#btAjustes{position:absolute;top:12px;right:12px;background:none;font-size:22px;color:#555}
+.alerta{-webkit-animation:pisca 1s 3;animation:pisca 1s 3}
+@-webkit-keyframes pisca{50%{background:#f5a623}}
+@keyframes pisca{50%{background:#f5a623}}
+</style>
+</head>
+<body>
+<div id="trilho">
+  <!-- 1. Geral: relógio + Spotify -->
+  <section class="tela"><div class="col" style="padding:24px">
+    <button id="btAjustes">⚙</button>
+    <div class="tech">
+      <div class="hora"><span id="hora">--:--</span><small id="seg">00</small></div>
+      <div class="barra"><i id="segBarra"></i></div>
+      <div class="data" id="data"></div>
+      <div class="stat" id="stat"></div>
+    </div>
+    <div class="sp"></div>
+  </div></section>
+  <!-- 2. Porta-retrato + Spotify -->
+  <section class="tela" id="telaFotos">
+    <div class="foto" id="fotoA"></div><div class="foto" id="fotoB"></div>
+    <div id="fotosVazio">Nenhuma foto ainda.<br><br><button id="btAddFotos2">Adicionar fotos</button></div>
+    <div id="fotosBarra"><div class="sp"></div></div>
+  </section>
+  <!-- 3. Casa -->
+  <section class="tela rolar"><h2>Casa</h2><div id="casaMsg"></div><div class="grade" id="casa"></div></section>
+  <!-- 4. Trabalho -->
+  <section class="tela rolar"><div class="duas">
+    <div><h2>Foco</h2>
+      <div class="pomo" id="pomo">25:00</div>
+      <div class="centro">
+        <button id="pIni">Iniciar</button><button id="pZera">Zerar</button><br>
+        <button data-m="foco">Foco</button><button data-m="pausa">Pausa</button><button data-m="longa">Pausa longa</button>
+        <p style="color:#9aa;margin-top:10px" id="pomoInfo"></p>
+      </div>
+    </div>
+    <div><h2>Tarefas</h2>
+      <div class="linha"><input id="novaTarefa" placeholder="Nova tarefa"><button id="addTarefa">+</button></div>
+      <div id="tarefas"></div>
+    </div>
+  </div></section>
+</div>
+<div id="pontos"><span class="on"></span><span></span><span></span><span></span></div>
+
+<div id="ajustes" class="rolar">
+  <h2>Ajustes</h2>
+  <label>Spotify Client ID (developer.spotify.com)</label><input id="cfSpId">
+  <p style="margin:8px 0"><button id="btSpLogin">Conectar Spotify</button> <button id="btSpSair">Desconectar</button></p>
+  <label>Home Assistant — endereço (ex: http://192.168.0.10:8123)</label><input id="cfHaUrl">
+  <label>Home Assistant — token de acesso de longa duração</label><input id="cfHaToken">
+  <label>Dispositivos (um por linha: entidade | Nome)</label><textarea id="cfHaEnt" rows="5" placeholder="light.sala | Luz da sala"></textarea>
+  <label>Minutos de foco / pausa / pausa longa</label><input id="cfPomo" placeholder="25/5/15">
+  <label>Segundos por foto</label><input id="cfFotoSeg">
+  <label>Fotos</label>
+  <p><button id="btAddFotos">Adicionar fotos</button> <button id="btLimpaFotos">Apagar todas</button> <span id="nFotos"></span></p>
+  <p style="margin-top:24px"><button id="btSalvar" style="background:#f5a623;color:#111">Salvar e fechar</button></p>
+</div>
+<input type="file" id="arqFotos" accept="image/*" multiple style="display:none">
+
+<script>
+(function () {
+'use strict';
+function $(id) { return document.getElementById(id); }
+function cls(c) { return document.getElementsByClassName(c); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function ler(k, d) { try { var v = localStorage.getItem('pm.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+function gravar(k, v) { try { localStorage.setItem('pm.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+function http(met, url, hdr, corpo, cb) {
+  var x = new XMLHttpRequest(), fim = false;
+  x.open(met, url, true);
+  for (var h in hdr) { if (hdr.hasOwnProperty(h)) x.setRequestHeader(h, hdr[h]); }
+  x.onreadystatechange = function () {
+    if (x.readyState !== 4 || fim) return; fim = true;
+    var j = null; try { j = x.responseText ? JSON.parse(x.responseText) : null; } catch (e) {}
+    cb(x.status, j);
+  };
+  x.send(corpo || null);
+}
+
+var cfg = ler('cfg', {});
+function c(k, d) { return cfg[k] === undefined || cfg[k] === '' ? d : cfg[k]; }
+
+/* ---------- Deslizar entre telas ---------- */
+var trilho = $('trilho'), atual = 0, N = 4, x0 = null, y0 = 0, dx = 0;
+function irPara(i) {
+  atual = Math.max(0, Math.min(N - 1, i));
+  var t = 'translateX(' + (-atual * 25) + '%)';
+  trilho.style.webkitTransition = trilho.style.transition = '';
+  trilho.style.webkitTransform = trilho.style.transform = t;
+  var p = $('pontos').children;
+  for (var k = 0; k < p.length; k++) p[k].className = k === atual ? 'on' : '';
+  if (atual === 2) casaAtualizar();
+}
+document.addEventListener('touchstart', function (e) {
+  if (e.target.type === 'range' || $('ajustes').style.display === 'block') { x0 = null; return; }
+  x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0;
+}, false);
+document.addEventListener('touchmove', function (e) {
+  if (x0 === null) return;
+  dx = e.touches[0].clientX - x0;
+  if (Math.abs(dx) > Math.abs(e.touches[0].clientY - y0)) {
+    e.preventDefault();
+    var w = window.innerWidth, t = 'translateX(' + (-atual * w + dx) / 4 / w * 100 + '%)';
+    trilho.style.webkitTransition = trilho.style.transition = 'none';
+    trilho.style.webkitTransform = trilho.style.transform = t;
+  }
+}, false);
+document.addEventListener('touchend', function () {
+  if (x0 === null) return; x0 = null;
+  irPara(Math.abs(dx) > window.innerWidth / 6 ? atual + (dx < 0 ? 1 : -1) : atual);
+}, false);
+document.addEventListener('keydown', function (e) { if (e.keyCode === 39) irPara(atual + 1); if (e.keyCode === 37) irPara(atual - 1); }, false);
+
+/* ---------- Relógio ---------- */
+var DIAS = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function relogio() {
+  var d = new Date(), ini = new Date(d.getFullYear(), 0, 1);
+  var sem = Math.ceil(((d - ini) / 864e5 + ini.getDay() + 1) / 7);
+  $('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  $('seg').textContent = pad(d.getSeconds());
+  $('segBarra').style.width = (d.getSeconds() / 59 * 100) + '%';
+  $('data').textContent = '> ' + DIAS[d.getDay()].slice(0, 3).toUpperCase() + ' // ' + pad(d.getDate()) + ' ' +
+    MESES[d.getMonth()].slice(0, 3).toUpperCase() + ' ' + d.getFullYear();
+  $('stat').textContent = 'SEM ' + pad(sem) + ' · DIA ' + Math.ceil((d - ini + 1) / 864e5) + ' · SYS ONLINE';
+}
+relogio(); setInterval(relogio, 1000);
+
+/* ---------- Spotify (controle remoto via Web API) ---------- */
+var SP = 'https://accounts.spotify.com', REDIR = location.origin + location.pathname;
+var tok = ler('sptok', null), estado = null;
+(function montarPlayer() {
+  var caixas = cls('sp');
+  for (var i = 0; i < caixas.length; i++) {
+    caixas[i].innerHTML = '<div class="sp-capa"></div><div class="sp-info"><div class="sp-tit">Spotify</div>' +
+      '<div class="sp-art sp-msg">Toque em ⚙ para conectar</div><div class="sp-bts">' +
+      '<button data-a="prev">⏮</button><button data-a="play">▶</button><button data-a="next">⏭</button></div>' +
+      '<input type="range" class="sp-vol" min="0" max="100" value="50"></div>';
+    var bts = caixas[i].getElementsByTagName('button');
+    for (var b = 0; b < bts.length; b++) bts[b].onclick = spAcao;
+    caixas[i].getElementsByTagName('input')[0].onchange = function () {
+      spApi('PUT', '/me/player/volume?volume_percent=' + this.value);
+    };
+  }
+})();
+function b64url(buf) {
+  var s = '', b = new Uint8Array(buf);
+  for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function spLogin() {
+  var id = $('cfSpId').value.trim();
+  if (!id) { alert('Cole o Client ID primeiro.'); return; }
+  cfg.spId = id; gravar('cfg', cfg);
+  if (!window.crypto || !crypto.subtle) { alert('Este navegador não suporta o login do Spotify. Atualize o Android System WebView/Chrome.'); return; }
+  var a = new Uint8Array(48); crypto.getRandomValues(a);
+  var ver = b64url(a); gravar('spver', ver);
+  crypto.subtle.digest('SHA-256', new TextEncoder().encode(ver)).then(function (h) {
+    location.href = SP + '/authorize?response_type=code&client_id=' + id +
+      '&scope=' + encodeURIComponent('user-read-playback-state user-modify-playback-state') +
+      '&redirect_uri=' + encodeURIComponent(REDIR) + '&code_challenge_method=S256&code_challenge=' + b64url(h);
+  });
+}
+function spToken(params, cb) {
+  var corpo = 'client_id=' + c('spId', '');
+  for (var k in params) corpo += '&' + k + '=' + encodeURIComponent(params[k]);
+  http('POST', SP + '/api/token', {'Content-Type': 'application/x-www-form-urlencoded'}, corpo, function (st, j) {
+    if (st === 200 && j) {
+      tok = { a: j.access_token, r: j.refresh_token || (tok && tok.r), exp: Date.now() + (j.expires_in - 60) * 1000 };
+      gravar('sptok', tok);
+    } else if (st === 400) { tok = null; gravar('sptok', null); }
+    cb();
+  });
+}
+var codigo = /[?&]code=([^&]+)/.exec(location.search);
+if (codigo) {
+  history.replaceState(null, '', REDIR);
+  spToken({ grant_type: 'authorization_code', code: decodeURIComponent(codigo[1]), redirect_uri: REDIR, code_verifier: ler('spver', '') }, spLer);
+}
+function spApi(met, caminho, cb) {
+  if (!tok) return;
+  if (Date.now() > tok.exp) { spToken({ grant_type: 'refresh_token', refresh_token: tok.r }, function () { if (tok && Date.now() < tok.exp) spApi(met, caminho, cb); }); return; }
+  http(met, 'https://api.spotify.com/v1' + caminho, { Authorization: 'Bearer ' + tok.a }, null, function (st, j) {
+    if (st === 401) { tok.exp = 0; return; }
+    if (cb) cb(st, j);
+  });
+}
+function spLer() {
+  if (!tok) return;
+  spApi('GET', '/me/player', function (st, j) { estado = st === 200 ? j : null; spDesenhar(); });
+}
+function spDesenhar() {
+  var it = estado && estado.item, i, tit = cls('sp-tit'), art = cls('sp-art'), capa = cls('sp-capa'), vol = cls('sp-vol');
+  for (i = 0; i < tit.length; i++) {
+    tit[i].textContent = it ? it.name : (tok ? 'Nada tocando' : 'Spotify');
+    art[i].textContent = it ? (it.artists || []).map(function (a) { return a.name; }).join(', ') :
+      (tok ? 'Abra o Spotify no PC ou celular' : 'Toque em ⚙ para conectar');
+    var img = it && it.album && it.album.images && it.album.images.length ? it.album.images[it.album.images.length > 1 ? 1 : 0].url : '';
+    capa[i].style.backgroundImage = img ? 'url(' + img + ')' : '';
+    if (estado && estado.device && document.activeElement !== vol[i]) vol[i].value = estado.device.volume_percent;
+  }
+  var bts = document.querySelectorAll('[data-a=play]');
+  for (i = 0; i < bts.length; i++) bts[i].textContent = estado && estado.is_playing ? '⏸' : '▶';
+}
+function spAcao() {
+  var a = this.getAttribute('data-a');
+  if (a === 'play') { spApi('PUT', '/me/player/' + (estado && estado.is_playing ? 'pause' : 'play')); if (estado) estado.is_playing = !estado.is_playing; spDesenhar(); }
+  else spApi('POST', '/me/player/' + (a === 'next' ? 'next' : 'previous'));
+  setTimeout(spLer, 700);
+}
+spLer(); setInterval(spLer, 5000);
+
+/* ---------- Porta-retrato ---------- */
+var fotos = ler('fotosIdx', []), fIdx = 0, fLado = 0;
+function fotoProx() {
+  $('fotosVazio').style.display = fotos.length ? 'none' : 'block';
+  if (!fotos.length || atual !== 1) return;
+  fIdx = (fIdx + 1) % fotos.length;
+  var de = fLado ? $('fotoB') : $('fotoA'), para = fLado ? $('fotoA') : $('fotoB');
+  para.style.backgroundImage = 'url(' + ler('foto.' + fotos[fIdx], '') + ')';
+  para.className = 'foto on'; de.className = 'foto'; fLado = 1 - fLado;
+}
+setInterval(fotoProx, c('fotoSeg', 12) * 1000); setTimeout(fotoProx, 300);
+function addFotos() { $('arqFotos').click(); }
+$('btAddFotos').onclick = $('btAddFotos2').onclick = addFotos;
+$('arqFotos').onchange = function () {
+  var arqs = this.files, i = 0, cheio = false;
+  (function proxima() {
+    if (i >= arqs.length || cheio) { gravar('fotosIdx', fotos); contarFotos(); fotoProx(); if (cheio) alert('Memória cheia: algumas fotos não couberam.'); return; }
+    var url = URL.createObjectURL(arqs[i++]), img = new Image();
+    img.onload = function () {
+      var m = 1280, e = Math.min(1, m / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * e); cv.height = Math.round(img.height * e);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      var id = Date.now() + '' + i;
+      if (gravar('foto.' + id, cv.toDataURL('image/jpeg', 0.72))) fotos.push(id); else cheio = true;
+      proxima();
+    };
+    img.onerror = proxima; img.src = url;
+  })();
+  this.value = '';
+};
+function contarFotos() { $('nFotos').textContent = fotos.length + ' foto(s)'; }
+$('btLimpaFotos').onclick = function () {
+  if (!confirm('Apagar todas as fotos?')) return;
+  for (var i = 0; i < fotos.length; i++) try { localStorage.removeItem('pm.foto.' + fotos[i]); } catch (e) {}
+  fotos = []; gravar('fotosIdx', fotos); contarFotos(); $('fotoA').className = $('fotoB').className = 'foto'; fotoProx();
+};
+
+/* ---------- Casa (Home Assistant) ---------- */
+var LIGA = { light: 1, 'switch': 1, fan: 1, input_boolean: 1, cover: 1, media_player: 1 };
+var NOMES = { on: 'Ligado', off: 'Desligado', open: 'Aberto', closed: 'Fechado', unavailable: 'Indisponível', playing: 'Tocando', paused: 'Pausado' };
+function casaLista() {
+  return c('haEnt', '').split('\n').map(function (l) { var p = l.split('|'); return { id: p[0].trim(), nome: (p[1] || p[0]).trim() }; })
+    .filter(function (d) { return d.id.indexOf('.') > 0; });
+}
+function haReq(met, caminho, corpo, cb) {
+  http(met, c('haUrl', '').replace(/\/$/, '') + '/api/' + caminho,
+    { Authorization: 'Bearer ' + c('haToken', ''), 'Content-Type': 'application/json' }, corpo, cb);
+}
+function casaMontar() {
+  var l = casaLista(), h = '';
+  if (!c('haUrl', '') || !l.length) { $('casaMsg').innerHTML = '<p style="color:#9aa">Configure o Home Assistant em ⚙ (tela 1).</p>'; $('casa').innerHTML = ''; return; }
+  for (var i = 0; i < l.length; i++) h += '<button class="disp" data-i="' + i + '"><b>' + esc(l[i].nome) + '</b><small>…</small></button>';
+  $('casa').innerHTML = h; $('casaMsg').innerHTML = '';
+  var bts = $('casa').getElementsByTagName('button');
+  for (i = 0; i < bts.length; i++) bts[i].onclick = casaTocar;
+}
+function casaAtualizar() {
+  var l = casaLista(), bts = $('casa').getElementsByTagName('button');
+  l.forEach(function (d, i) {
+    haReq('GET', 'states/' + d.id, null, function (st, j) {
+      if (!bts[i]) return;
+      if (st !== 200 || !j) { $('casaMsg').innerHTML = '<p class="aviso">Sem resposta do Home Assistant (verifique endereço, token e CORS).</p>'; return; }
+      var u = j.attributes && j.attributes.unit_of_measurement;
+      bts[i].getElementsByTagName('small')[0].textContent = (NOMES[j.state] || j.state) + (u ? ' ' + u : '');
+      bts[i].className = 'disp' + (/^(on|open|playing)$/.test(j.state) ? ' lig' : '');
+    });
+  });
+}
+function casaTocar() {
+  var d = casaLista()[this.getAttribute('data-i')], dom = d.id.split('.')[0];
+  if (dom === 'scene' || dom === 'script') haReq('POST', 'services/' + dom + '/turn_on', JSON.stringify({ entity_id: d.id }), function () {});
+  else if (LIGA[dom]) haReq('POST', 'services/homeassistant/toggle', JSON.stringify({ entity_id: d.id }), function () { casaAtualizar(); });
+}
+casaMontar(); setInterval(function () { if (atual === 2) casaAtualizar(); }, 10000);
+
+/* ---------- Trabalho: Pomodoro + tarefas ---------- */
+var modo = 'foco', fimEm = 0, resta = 0, rodando = false, audio = null;
+function durs() { var p = String(c('pomo', '25/5/15')).split('/'); return { foco: +p[0] || 25, pausa: +p[1] || 5, longa: +p[2] || 15 }; }
+var hoje = new Date().toDateString(), feitos = ler('pomoDia', {});
+if (feitos.d !== hoje) feitos = { d: hoje, n: 0 };
+function pomoZerar(m) { modo = m || modo; rodando = false; resta = durs()[modo] * 60000; $('pIni').textContent = 'Iniciar'; pomoMostrar(); }
+function pomoMostrar() {
+  var s = Math.ceil(resta / 1000);
+  $('pomo').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  $('pomoInfo').textContent = { foco: 'Foco', pausa: 'Pausa', longa: 'Pausa longa' }[modo] + ' · ' + feitos.n + ' pomodoro(s) hoje';
+}
+function bipe() {
+  try {
+    for (var k = 0; k < 3; k++) {
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+      o.start(audio.currentTime + k * 0.4); o.stop(audio.currentTime + k * 0.4 + 0.2);
+    }
+  } catch (e) {}
+}
+$('pIni').onclick = function () {
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  rodando = !rodando;
+  if (rodando) fimEm = Date.now() + resta;
+  this.textContent = rodando ? 'Pausar' : 'Continuar';
+};
+$('pZera').onclick = function () { pomoZerar(); };
+var mb = document.querySelectorAll('[data-m]');
+for (var q = 0; q < mb.length; q++) mb[q].onclick = function () { pomoZerar(this.getAttribute('data-m')); };
+setInterval(function () {
+  if (!rodando) return;
+  resta = Math.max(0, fimEm - Date.now()); pomoMostrar();
+  if (resta === 0) {
+    bipe(); document.body.className = 'alerta'; setTimeout(function () { document.body.className = ''; }, 3000);
+    if (modo === 'foco') { feitos.n++; gravar('pomoDia', feitos); pomoZerar(feitos.n % 4 === 0 ? 'longa' : 'pausa'); }
+    else pomoZerar('foco');
+  }
+}, 250);
+pomoZerar('foco');
+
+var tarefas = ler('tarefas', []);
+function tarefasDesenhar() {
+  var h = '';
+  for (var i = 0; i < tarefas.length; i++)
+    h += '<div class="tarefa' + (tarefas[i].ok ? ' ok' : '') + '"><span data-t="' + i + '">' + esc(tarefas[i].t) + '</span><button data-x="' + i + '">×</button></div>';
+  $('tarefas').innerHTML = h;
+  var el = $('tarefas').querySelectorAll('[data-t],[data-x]');
+  for (i = 0; i < el.length; i++) el[i].onclick = function () {
+    var t = this.getAttribute('data-t'), x = this.getAttribute('data-x');
+    if (t !== null) tarefas[t].ok = !tarefas[t].ok; else tarefas.splice(x, 1);
+    gravar('tarefas', tarefas); tarefasDesenhar();
+  };
+}
+$('addTarefa').onclick = function () {
+  var v = $('novaTarefa').value.trim(); if (!v) return;
+  tarefas.push({ t: v, ok: false }); $('novaTarefa').value = ''; gravar('tarefas', tarefas); tarefasDesenhar();
+};
+tarefasDesenhar();
+
+/* ---------- Ajustes ---------- */
+$('btAjustes').onclick = function () {
+  $('cfSpId').value = c('spId', ''); $('cfHaUrl').value = c('haUrl', ''); $('cfHaToken').value = c('haToken', '');
+  $('cfHaEnt').value = c('haEnt', ''); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12);
+  contarFotos(); $('ajustes').style.display = 'block';
+};
+$('btSpLogin').onclick = spLogin;
+$('btSpSair').onclick = function () { tok = null; estado = null; gravar('sptok', null); spDesenhar(); };
+$('btSalvar').onclick = function () {
+  cfg.spId = $('cfSpId').value.trim(); cfg.haUrl = $('cfHaUrl').value.trim(); cfg.haToken = $('cfHaToken').value.trim();
+  cfg.haEnt = $('cfHaEnt').value; cfg.pomo = $('cfPomo').value.trim(); cfg.fotoSeg = +$('cfFotoSeg').value || 12;
+  gravar('cfg', cfg); $('ajustes').style.display = 'none'; casaMontar(); if (!rodando) pomoZerar();
+};
+})();
+</script>
+</body>
+</html>
