@@ -1,0 +1,19 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.reherrmann.desktab'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.reherrmann.desktab'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+    signingConfigs {
+        fixo { storeFile file('desktab.jks'); storePassword 'desktab'; keyAlias 'desktab'; keyPassword 'desktab' }
+    }
+    lint { checkReleaseBuilds false }
+    buildTypes {
+        release { minifyEnabled false; signingConfig signingConfigs.fixo }
+    }
+}

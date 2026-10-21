@@ -14,3 +14,8 @@ Telas (arraste para o lado):
 - No tablet: Chrome → menu → *Adicionar à tela inicial*. Para a tela não apagar, ative "manter tela ligada" (Opções do desenvolvedor → Permanecer ativo, com o carregador).
 
 Configurações, fotos e tarefas ficam salvas só no tablet.
+
+## App Android (APK)
+Baixe: https://github.com/Reherrmann/desktab/releases/latest/download/DESKtab.apk
+O app abre o painel em tela cheia, mantém a tela ligada e abre sozinho quando o tablet liga.
+Ele carrega a página do GitHub Pages, então melhorias no `index.html` chegam sem reinstalar.
