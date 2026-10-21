@@ -21,16 +21,16 @@ input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #3
 #pontos span.on{background:#e8e8e8}
 .col{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;height:100%}
 /* Relógio: troque este bloco quando escolher o modelo */
-.tech{position:relative;padding:3vmin 5vmin;text-align:center;font-family:"Share Tech Mono",monospace;color:#4ff0ff}
+.tech{position:relative;width:100%;padding:4vmin 3vw;text-align:center;font-family:"Share Tech Mono",monospace;color:#4ff0ff}
 .tech:before,.tech:after{content:"";position:absolute;width:28px;height:28px;border:2px solid #4ff0ff;opacity:.6}
 .tech:before{top:0;left:0;border-right:0;border-bottom:0}
 .tech:after{bottom:0;right:0;border-left:0;border-top:0}
-.hora{font-family:Orbitron,"Share Tech Mono",monospace;font-weight:700;font-size:19vmin;line-height:1;letter-spacing:1vmin;text-shadow:0 0 12px rgba(79,240,255,.55)}
+.hora{font-family:Orbitron,"Share Tech Mono",monospace;font-weight:700;font-size:20vw;line-height:1;white-space:nowrap;display:inline-block;text-shadow:0 0 12px rgba(79,240,255,.55)}
 .hora small{font-size:7vmin;color:#ff3fa4;text-shadow:0 0 10px rgba(255,63,164,.6);margin-left:1vmin}
 .barra{height:3px;background:#12303a;margin:2vmin 0 1.5vmin}
 .barra i{display:block;height:100%;width:0;background:#4ff0ff;box-shadow:0 0 8px #4ff0ff}
-.data{font-size:3.6vmin;letter-spacing:.5vmin;color:#7fb8c4}
-.stat{font-size:2.6vmin;color:#3d6c78;margin-top:1vmin;letter-spacing:.3vmin}
+.data{font-size:5vmin;letter-spacing:.5vmin;color:#7fb8c4}
+.stat{font-size:3.4vmin;color:#3d6c78;margin-top:1vmin;letter-spacing:.3vmin}
 /* Spotify */
 .sp{width:100%;max-width:640px;margin-top:5vmin;background:#16191e;border-radius:16px;padding:14px;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center}
 .sp-capa{width:72px;height:72px;border-radius:8px;background:#222 center/cover no-repeat;-webkit-flex-shrink:0;flex-shrink:0;margin-right:14px}
@@ -82,12 +82,11 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
   <section class="tela"><div class="col" style="padding:24px">
     <button id="btAjustes">⚙</button>
     <div class="tech">
-      <div class="hora"><span id="hora">--:--</span><small id="seg">00</small></div>
+      <div class="hora"><span id="hora">--:--</span></div>
       <div class="barra"><i id="segBarra"></i></div>
       <div class="data" id="data"></div>
       <div class="stat" id="stat"></div>
     </div>
-    <div class="sp"></div>
   </div></section>
   <!-- 2. Porta-retrato + Spotify -->
   <section class="tela" id="telaFotos">
@@ -192,13 +191,21 @@ function relogio() {
   var d = new Date(), ini = new Date(d.getFullYear(), 0, 1);
   var sem = Math.ceil(((d - ini) / 864e5 + ini.getDay() + 1) / 7);
   $('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
-  $('seg').textContent = pad(d.getSeconds());
   $('segBarra').style.width = (d.getSeconds() / 59 * 100) + '%';
   $('data').textContent = '> ' + DIAS[d.getDay()].slice(0, 3).toUpperCase() + ' // ' + pad(d.getDate()) + ' ' +
     MESES[d.getMonth()].slice(0, 3).toUpperCase() + ' ' + d.getFullYear();
   $('stat').textContent = 'SEM ' + pad(sem) + ' · DIA ' + Math.ceil((d - ini + 1) / 864e5) + ' · SYS ONLINE';
 }
+function ajustarHora() {
+  var h = $('hora').parentNode, k = 100;
+  h.style.fontSize = k + 'px';
+  k = Math.min(k * window.innerWidth * 0.9 / h.offsetWidth, window.innerHeight * 0.5);
+  h.style.fontSize = Math.floor(k) + 'px';
+}
 relogio(); setInterval(relogio, 1000);
+ajustarHora(); setTimeout(ajustarHora, 1500);
+window.addEventListener('resize', ajustarHora, false);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarHora);
 
 /* ---------- Spotify (controle remoto via Web API) ---------- */
 var SP = 'https://accounts.spotify.com', REDIR = location.origin + location.pathname;
