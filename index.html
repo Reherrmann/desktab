@@ -27,6 +27,12 @@ input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #3
 @-webkit-keyframes alarmePisca{50%{opacity:.25}}
 @keyframes alarmePisca{50%{opacity:.25}}
 .cores button{width:44px;height:44px;margin:4px;border-radius:50%;border:2px solid #333;padding:0}
+.alx{width:calc(33.33% - 16px);margin:8px;border:1px solid #2a3038;border-radius:10px;padding:16px;font-family:"Share Tech Mono",monospace;-webkit-transition:box-shadow .3s;transition:box-shadow .3s}
+.alx .ic{font-size:34px}
+.alxNome{font-size:20px;letter-spacing:3px;margin:6px 0 12px;text-transform:uppercase;color:#7fb8c4}
+.alx button{width:48%;font-size:16px;letter-spacing:2px;padding:14px 0;background:#161a20}
+.alx button+button{margin-left:4%}
+.alxMsg{font-size:12px;color:#5a7;height:16px;margin-top:8px}
 #pontos{position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:5}
 #pontos span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin:0 5px}
 #pontos span.on{background:#e8e8e8}
@@ -133,6 +139,7 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
   <h2>Ajustes</h2>
   <label>Spotify Client ID (developer.spotify.com)</label><input id="cfSpId">
   <p style="margin:8px 0"><button id="btSpLogin">Conectar Spotify</button> <button id="btSpSair">Desconectar</button></p>
+  <label>Alexa — um por linha: Nome | link para LIGAR | link para DESLIGAR</label><textarea id="cfAlexa" rows="6"></textarea>
   <label>Home Assistant — endereço (ex: http://192.168.0.10:8123)</label><input id="cfHaUrl">
   <label>Home Assistant — token de acesso de longa duração</label><input id="cfHaToken">
   <label>Dispositivos (um por linha: entidade | Nome)</label><textarea id="cfHaEnt" rows="5" placeholder="light.sala | Luz da sala"></textarea>
@@ -167,7 +174,7 @@ function http(met, url, hdr, corpo, cb) {
   x.send(corpo || null);
 }
 
-var VERSAO = '6';
+var VERSAO = '7';
 /* Recarrega sozinho quando sai versão nova no GitHub Pages */
 setInterval(function () {
   var x = new XMLHttpRequest();
@@ -386,9 +393,44 @@ function haReq(met, caminho, corpo, cb) {
   http(met, c('haUrl', '').replace(/\/$/, '') + '/api/' + caminho,
     { Authorization: 'Bearer ' + c('haToken', ''), 'Content-Type': 'application/json' }, corpo, cb);
 }
+var ALEXA_PADRAO = 'Luz | | \nLuminária | | \nCanto | | \nTV | | \nQuarto | | ';
+var ICONES = { luz: '💡', lumi: '🔆', canto: '✨', tv: '📺', quarto: '🛏' };
+var alexaEst = ler('alexaEst', {});
+function alexaLista() {
+  return c('alexa', ALEXA_PADRAO).split('\n').map(function (l) {
+    var p = l.split('|');
+    return { nome: p[0].trim(), on: (p[1] || '').trim(), off: (p[2] || '').trim() };
+  }).filter(function (d) { return d.nome; });
+}
+function alexaIcone(n) {
+  n = n.toLowerCase();
+  for (var k in ICONES) if (n.indexOf(k) === 0) return ICONES[k];
+  return '🔌';
+}
+function alexaMontar() {
+  var l = alexaLista(), h = '';
+  for (var i = 0; i < l.length; i++)
+    h += '<div class="alx' + (alexaEst[l[i].nome] ? ' lig' : '') + '"><div class="ic">' + alexaIcone(l[i].nome) + '</div>' +
+      '<div class="alxNome">' + esc(l[i].nome) + '</div><button data-i="' + i + '" data-on="1">ON</button><button data-i="' + i + '" data-on="0">OFF</button>' +
+      '<div class="alxMsg"></div></div>';
+  $('casa').innerHTML = h; $('casaMsg').innerHTML = '';
+  var bts = $('casa').getElementsByTagName('button');
+  for (i = 0; i < bts.length; i++) bts[i].onclick = alexaTocar;
+}
+function alexaTocar() {
+  var d = alexaLista()[this.getAttribute('data-i')], on = this.getAttribute('data-on') === '1';
+  var card = this.parentNode, msg = card.getElementsByTagName('div')[2], url = on ? d.on : d.off;
+  if (!url) { msg.textContent = 'sem link · puxe para cima'; return; }
+  new Image().src = url + (url.indexOf('?') > 0 ? '&' : '?') + '_=' + Date.now();
+  alexaEst[d.nome] = on; gravar('alexaEst', alexaEst);
+  card.className = 'alx' + (on ? ' lig' : '');
+  msg.textContent = '> comando enviado';
+  setTimeout(function () { msg.textContent = ''; }, 2500);
+}
 function casaMontar() {
   var l = casaLista(), h = '';
-  if (!c('haUrl', '') || !l.length) { $('casaMsg').innerHTML = '<p style="color:#9aa">Puxe a tela para cima para configurar o Home Assistant.</p>'; $('casa').innerHTML = ''; return; }
+  if (!c('haUrl', '') || !l.length) { alexaMontar(); return; }
+  if (false) { $('casaMsg').innerHTML = '<p style="color:#9aa">Puxe a tela para cima para configurar o Home Assistant.</p>'; $('casa').innerHTML = ''; return; }
   for (var i = 0; i < l.length; i++) h += '<button class="disp" data-i="' + i + '"><b>' + esc(l[i].nome) + '</b><small>…</small></button>';
   $('casa').innerHTML = h; $('casaMsg').innerHTML = '';
   var bts = $('casa').getElementsByTagName('button');
@@ -475,14 +517,14 @@ tarefasDesenhar();
 /* ---------- Ajustes ---------- */
 function abrirAjustes() {
   $('cfSpId').value = c('spId', ''); $('cfHaUrl').value = c('haUrl', ''); $('cfHaToken').value = c('haToken', '');
-  $('cfHaEnt').value = c('haEnt', ''); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12); $('cfCor').value = c('cor', '#4ff0ff');
+  $('cfHaEnt').value = c('haEnt', ''); $('cfAlexa').value = c('alexa', ALEXA_PADRAO); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12); $('cfCor').value = c('cor', '#4ff0ff');
   contarFotos(); $('ajustes').style.display = 'block';
 }
 $('btSpLogin').onclick = spLogin;
 $('btSpSair').onclick = function () { tok = null; estado = null; gravar('sptok', null); spDesenhar(); };
 $('btSalvar').onclick = function () {
   cfg.spId = $('cfSpId').value.trim(); cfg.haUrl = $('cfHaUrl').value.trim(); cfg.haToken = $('cfHaToken').value.trim();
-  cfg.haEnt = $('cfHaEnt').value; cfg.pomo = $('cfPomo').value.trim(); cfg.fotoSeg = +$('cfFotoSeg').value || 12; cfg.cor = $('cfCor').value; aplicarCor();
+  cfg.haEnt = $('cfHaEnt').value; cfg.alexa = $('cfAlexa').value; cfg.pomo = $('cfPomo').value.trim(); cfg.fotoSeg = +$('cfFotoSeg').value || 12; cfg.cor = $('cfCor').value; aplicarCor();
   gravar('cfg', cfg); $('ajustes').style.display = 'none'; casaMontar(); if (!rodando) pomoZerar();
 };
 
@@ -490,7 +532,7 @@ $('btSalvar').onclick = function () {
 function aplicarCor() {
   var k = c('cor', '#4ff0ff');
   $('tema').textContent = '.tech,.timer{color:' + k + '}.tech:before,.tech:after,.timer button{border-color:' + k + '}' +
-    '.hora{text-shadow:0 0 12px ' + k + '}.barra i{background:' + k + ';box-shadow:0 0 8px ' + k + '}#alarme{background:' + k + '}';
+    '.hora{text-shadow:0 0 12px ' + k + '}.alx.lig{border-color:' + k + ';box-shadow:0 0 14px ' + k + '}.alx.lig .alxNome{color:' + k + '}.barra i{background:' + k + ';box-shadow:0 0 8px ' + k + '}#alarme{background:' + k + '}';
 }
 (function () {
   var cores = ['#4ff0ff', '#ff3fa4', '#39ff88', '#ffb020', '#b388ff', '#ff4b4b', '#ffffff'], h = '';
