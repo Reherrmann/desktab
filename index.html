@@ -18,6 +18,15 @@ input,textarea{font:inherit;color:#e8e8e8;background:#1a1d22;border:1px solid #3
 .rolar{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 24px 50px}
 #puxar{position:fixed;top:-50px;left:0;right:0;text-align:center;z-index:20;color:#4ff0ff;font:16px "Share Tech Mono",monospace;padding:12px;opacity:0}
 #subir{position:fixed;bottom:-50px;left:0;right:0;text-align:center;z-index:20;color:#4ff0ff;font:16px "Share Tech Mono",monospace;padding:12px;opacity:0}
+.timer{margin-top:4vmin;font-family:"Share Tech Mono",monospace;color:#4ff0ff}
+.timer button{background:transparent;border:1px solid #4ff0ff;color:inherit;font-size:3.4vmin;letter-spacing:.4vmin;padding:1.6vmin 3.5vmin;margin:0 1.2vmin;border-radius:6px}
+.timer button:active{background:rgba(255,255,255,.1)}
+#tmResta{font-size:7vmin;letter-spacing:.6vmin;vertical-align:middle;margin-right:2vmin}
+#alarme{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:40;background:#4ff0ff;color:#0d0f12;text-align:center;padding-top:30vh;font:bold 9vmin "Share Tech Mono",monospace;-webkit-animation:alarmePisca .8s infinite;animation:alarmePisca .8s infinite}
+#alarme small{display:block;font-size:3.5vmin;margin-top:4vmin}
+@-webkit-keyframes alarmePisca{50%{opacity:.25}}
+@keyframes alarmePisca{50%{opacity:.25}}
+.cores button{width:44px;height:44px;margin:4px;border-radius:50%;border:2px solid #333;padding:0}
 #pontos{position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:5}
 #pontos span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin:0 5px}
 #pontos span.on{background:#e8e8e8}
@@ -87,6 +96,8 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
       <div class="data" id="data"></div>
       <div class="stat" id="stat"></div>
     </div>
+    <div class="timer" id="timer"><button data-tm="5">5 MIN</button><button data-tm="10">10 MIN</button><button data-tm="30">30 MIN</button></div>
+    <div class="timer" id="timerRoda" style="display:none"><span id="tmResta">00:00</span><button id="tmParar">✕</button></div>
   </div></section>
   <!-- 2. Porta-retrato + Spotify -->
   <section class="tela" id="telaFotos">
@@ -112,6 +123,8 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
     </div>
   </div></section>
 </div>
+<div id="alarme">TEMPO ESGOTADO<small>toque para parar</small></div>
+<style id="tema"></style>
 <div id="puxar">↻ Solte para atualizar</div>
 <div id="subir">⚙ Solte para abrir os ajustes</div>
 <div id="pontos"><span class="on"></span><span></span><span></span><span></span></div>
@@ -124,6 +137,8 @@ h2{font-weight:300;font-size:24px;margin-bottom:14px}
   <label>Home Assistant — token de acesso de longa duração</label><input id="cfHaToken">
   <label>Dispositivos (um por linha: entidade | Nome)</label><textarea id="cfHaEnt" rows="5" placeholder="light.sala | Luz da sala"></textarea>
   <label>Minutos de foco / pausa / pausa longa</label><input id="cfPomo" placeholder="25/5/15">
+  <label>Cor do relógio e do timer</label>
+  <div class="linha"><input type="color" id="cfCor" style="width:80px;height:48px;padding:2px"><div class="cores" id="cores"></div></div>
   <label>Segundos por foto</label><input id="cfFotoSeg">
   <label>Fotos</label>
   <p><button id="btAddFotos">Adicionar fotos</button> <button id="btLimpaFotos">Apagar todas</button> <span id="nFotos"></span></p>
@@ -152,7 +167,7 @@ function http(met, url, hdr, corpo, cb) {
   x.send(corpo || null);
 }
 
-var VERSAO = '5';
+var VERSAO = '6';
 /* Recarrega sozinho quando sai versão nova no GitHub Pages */
 setInterval(function () {
   var x = new XMLHttpRequest();
@@ -230,11 +245,11 @@ function relogio() {
 function ajustarHora() {
   var h = $('hora').parentNode, k = 100;
   h.style.fontSize = k + 'px';
-  k = Math.min(k * window.innerWidth * 0.9 / h.offsetWidth, window.innerHeight * 0.5);
+  k = Math.min(k * window.innerWidth * 0.72 / h.offsetWidth, window.innerHeight * 0.36);
   h.style.fontSize = Math.floor(k) + 'px';
 }
 relogio(); setInterval(relogio, 1000);
-ajustarHora(); setTimeout(ajustarHora, 1500);
+ajustarHora(); setTimeout(ajustarHora, 1500); setTimeout(ajustarHora, 5000); setInterval(ajustarHora, 60000);
 window.addEventListener('resize', ajustarHora, false);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarHora);
 
@@ -460,16 +475,54 @@ tarefasDesenhar();
 /* ---------- Ajustes ---------- */
 function abrirAjustes() {
   $('cfSpId').value = c('spId', ''); $('cfHaUrl').value = c('haUrl', ''); $('cfHaToken').value = c('haToken', '');
-  $('cfHaEnt').value = c('haEnt', ''); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12);
+  $('cfHaEnt').value = c('haEnt', ''); $('cfPomo').value = c('pomo', '25/5/15'); $('cfFotoSeg').value = c('fotoSeg', 12); $('cfCor').value = c('cor', '#4ff0ff');
   contarFotos(); $('ajustes').style.display = 'block';
 }
 $('btSpLogin').onclick = spLogin;
 $('btSpSair').onclick = function () { tok = null; estado = null; gravar('sptok', null); spDesenhar(); };
 $('btSalvar').onclick = function () {
   cfg.spId = $('cfSpId').value.trim(); cfg.haUrl = $('cfHaUrl').value.trim(); cfg.haToken = $('cfHaToken').value.trim();
-  cfg.haEnt = $('cfHaEnt').value; cfg.pomo = $('cfPomo').value.trim(); cfg.fotoSeg = +$('cfFotoSeg').value || 12;
+  cfg.haEnt = $('cfHaEnt').value; cfg.pomo = $('cfPomo').value.trim(); cfg.fotoSeg = +$('cfFotoSeg').value || 12; cfg.cor = $('cfCor').value; aplicarCor();
   gravar('cfg', cfg); $('ajustes').style.display = 'none'; casaMontar(); if (!rodando) pomoZerar();
 };
+
+/* ---------- Cor ---------- */
+function aplicarCor() {
+  var k = c('cor', '#4ff0ff');
+  $('tema').textContent = '.tech,.timer{color:' + k + '}.tech:before,.tech:after,.timer button{border-color:' + k + '}' +
+    '.hora{text-shadow:0 0 12px ' + k + '}.barra i{background:' + k + ';box-shadow:0 0 8px ' + k + '}#alarme{background:' + k + '}';
+}
+(function () {
+  var cores = ['#4ff0ff', '#ff3fa4', '#39ff88', '#ffb020', '#b388ff', '#ff4b4b', '#ffffff'], h = '';
+  for (var i = 0; i < cores.length; i++) h += '<button style="background:' + cores[i] + '" data-cor="' + cores[i] + '"></button>';
+  $('cores').innerHTML = h;
+  var b = $('cores').getElementsByTagName('button');
+  for (i = 0; i < b.length; i++) b[i].onclick = function () { $('cfCor').value = this.getAttribute('data-cor'); cfg.cor = $('cfCor').value; aplicarCor(); };
+})();
+aplicarCor();
+
+/* ---------- Timer rápido ---------- */
+var tmFim = 0, tmBipe = null;
+function tmMostrar(rodando) { $('timer').style.display = rodando ? 'none' : 'block'; $('timerRoda').style.display = rodando ? 'block' : 'none'; }
+var tb = $('timer').getElementsByTagName('button');
+for (var w = 0; w < tb.length; w++) tb[w].onclick = function () {
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  tmFim = Date.now() + this.getAttribute('data-tm') * 60000; tmMostrar(true); tmTick();
+};
+$('tmParar').onclick = function () { tmFim = 0; tmMostrar(false); };
+function tmTick() {
+  if (!tmFim) return;
+  var s = Math.max(0, Math.ceil((tmFim - Date.now()) / 1000));
+  $('tmResta').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  if (s === 0) {
+    tmFim = 0; tmMostrar(false); $('alarme').style.display = 'block';
+    bipe(); tmBipe = setInterval(bipe, 1500);
+    setTimeout(alarmeParar, 120000);
+  }
+}
+function alarmeParar() { $('alarme').style.display = 'none'; clearInterval(tmBipe); }
+$('alarme').onclick = alarmeParar;
+setInterval(tmTick, 500);
 })();
 </script>
 </body>
