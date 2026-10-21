@@ -150,6 +150,17 @@ function http(met, url, hdr, corpo, cb) {
   x.send(corpo || null);
 }
 
+var VERSAO = '3';
+/* Recarrega sozinho quando sai versão nova no GitHub Pages */
+setInterval(function () {
+  var x = new XMLHttpRequest();
+  x.open('GET', location.pathname + '?v=' + Date.now(), true);
+  x.onload = function () {
+    var m = /var VERSAO = '([^']+)'/.exec(x.responseText);
+    if (x.status === 200 && m && m[1] !== VERSAO) location.reload();
+  };
+  x.send();
+}, 300000);
 var cfg = ler('cfg', {});
 function c(k, d) { return cfg[k] === undefined || cfg[k] === '' ? d : cfg[k]; }
 
@@ -194,7 +205,7 @@ function relogio() {
   $('segBarra').style.width = (d.getSeconds() / 59 * 100) + '%';
   $('data').textContent = '> ' + DIAS[d.getDay()].slice(0, 3).toUpperCase() + ' // ' + pad(d.getDate()) + ' ' +
     MESES[d.getMonth()].slice(0, 3).toUpperCase() + ' ' + d.getFullYear();
-  $('stat').textContent = 'SEM ' + pad(sem) + ' · DIA ' + Math.ceil((d - ini + 1) / 864e5) + ' · SYS ONLINE';
+  $('stat').textContent = 'SEM ' + pad(sem) + ' · DIA ' + Math.ceil((d - ini + 1) / 864e5) + ' · SYS ONLINE · v' + VERSAO;
 }
 function ajustarHora() {
   var h = $('hora').parentNode, k = 100;
